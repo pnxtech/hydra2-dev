@@ -82,10 +82,12 @@ export default class Hydra2 extends EventEmitter {
       if (this.config.serviceIP && this.config.serviceIP !== '' && Network.isIP(this.config.serviceIP) === false) {
         this.config.serviceIP = await Network.ipFromDNS(this.config.serviceIP);
       } else if (!this.config.serviceIP || this.config.serviceIP === '') {
-        this.config.serviceIP = Network.ipFromInterfaceNameMask(this.config.serviceInterface);
-      } else {
-        // not using serviceInterface - try best guess
-        this.config.serviceIP = Network.ipBestGuess();
+        if (this.config.serviceInterface && this.config.serviceInterface !== '') {
+          this.config.serviceIP = Network.ipFromInterfaceNameMask(this.config.serviceInterface);
+        } else {
+          // not using serviceInterface - try best guess
+          this.config.serviceIP = Network.ipBestGuess();
+        }       
       }
     }    
   }

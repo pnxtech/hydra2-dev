@@ -47,6 +47,9 @@ export default class Network {
    * @returns {string} ipaddress
    */
   static ipFromInterfaceNameMask(interfaceNameMask: string): string {
+    if (interfaceNameMask === '') {
+      return '';
+    }
     let interfaces: any = os.networkInterfaces();
     let ipAddress: string = '';
     let segments = interfaceNameMask.split('/');
