@@ -1,10 +1,11 @@
 import {EventEmitter} from 'events';
-import os from 'os';
-import {Cache} from './cache';
+import Cache from './cache';
+import Network from './network';
 
 interface IHydraHash {
   [name: string]: any
 };
+
 
 export default class Hydra2 extends EventEmitter {
   private HYDRA_REDIS_DB = 0;
@@ -37,18 +38,28 @@ export default class Hydra2 extends EventEmitter {
   private healthTimerInterval:any = null;
   private initialized: boolean = false;
   private hostName: string;
-  private internalCache: any;
+  private internalCache: Cache;
 
   constructor() {
     super();
     this.updatePresence = this.updatePresence.bind(this);
     this.updateHealthCheck = this.updateHealthCheck.bind(this);
-    this.hostName = os.hostname();
+    this.hostName = Network.hostName;
     this.internalCache = new Cache();
   }
 
-  public init(config: string): void {
+  public async init(config: IHydraHash) {
+    this.config = config.hydra;
+    console.log(this.config);
 
+    // const ip:string = await Network.ipFromDNS('pnxtech.duckdns.org');
+    // const ip:string = Network.ipFromInterfaceNameMask('en0/255.255.255.0')
+    const ip:string | undefined = Network.ipBestGuess();
+    if (ip) {
+      console.log(`ip: ${ip}`);
+    }
+
+    this.determineIPAddress();
   }
 
   private updatePresence() {
@@ -57,5 +68,25 @@ export default class Hydra2 extends EventEmitter {
 
   private updateHealthCheck() {
 
+  }
+
+  /**
+   * @name determineIPAddress
+   * @description parse this.config to determine machine's IP address
+   * @return {void}
+   */
+  private async determineIPAddress() {
+    if (this.config.serviceDNS && this.config.serviceDNS !== '') {
+      this.config.serviceIP = this.config.serviceDNS;
+    } else {
+      if (this.config.serviceIP && this.config.serviceIP !== '' && Network.isIP(this.config.serviceIP) === false) {
+        this.config.serviceIP = await Network.ipFromDNS(this.config.serviceIP);
+      } else if (!this.config.serviceIP || this.config.serviceIP === '') {
+        this.config.serviceIP = Network.ipFromInterfaceNameMask(this.config.serviceInterface);
+      } else {
+        // not using serviceInterface - try best guess
+        this.config.serviceIP = Network.ipBestGuess();
+      }
+    }    
   }
 }

@@ -5,7 +5,8 @@
   "author": "Carlos Justiniano <cjus@ieee.org>",
   "main": "index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "start": "node ./dist/app.js"
   },
   "repository": {
     "type": "git",

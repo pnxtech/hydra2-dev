@@ -1,7 +1,7 @@
 {
   "hydra": {
     "serviceName": "hydra2",
-    "serviceDescription": "Hydra2 test rigs",
+    "serviceDescription": "Hydra2 test rig",
     "serviceIP": "",
     "servicePort": "8000",
     "serviceType": "hydra2",

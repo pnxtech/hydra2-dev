@@ -7,7 +7,7 @@ interface IHydraCacheHash {
   [name: string]: any
 };
 
-export class Cache {
+export default class Cache {
   private data: IHydraCacheHash = {};
 
   /**
