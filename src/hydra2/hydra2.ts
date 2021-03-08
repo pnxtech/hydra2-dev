@@ -39,7 +39,7 @@ export default class Hydra2 extends EventEmitter {
   private mcMessageChannelClient: string = '';
   private mcDirectMessageChannelClient: string = '';
   private messageChannelPool:IHydraHash = {};
-  private config: any = null;
+  private config: IHydraHash | undefined;
   private serviceName: string = '';
   private serviceDescription: string = '';
   private serviceVersion: string = '';
@@ -156,6 +156,9 @@ Public members - these are the member intended for application use
    * @return {void}
    */
   private async determineIPAddress() {
+    if (!this.config) {
+      throw new Error('hydra config file is invalid');
+    }
     if (this.config.serviceDNS && this.config.serviceDNS !== '') {
       this.config.serviceIP = this.config.serviceDNS;
     } else {
