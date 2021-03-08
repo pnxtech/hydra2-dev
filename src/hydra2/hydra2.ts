@@ -1,13 +1,24 @@
+/*
+    __  __          __          ___ 
+   / / / /_  ______/ /___ _____|__ \
+  / /_/ / / / / __  / __ `/ ___/_/ /
+ / __  / /_/ / /_/ / /_/ / /  / __/ 
+/_/ /_/\__, /\__,_/\__,_/_/  /____/ 
+      /____/                   
+ Hydra2 is a rewrite of Hydra for NodeJS.      
+*/
+
 import {EventEmitter} from 'events';
 import Cache from './cache';
 import Network from './network';
+import Utils from './utils';
 
 interface IHydraHash {
   [name: string]: any
 };
 
-
 export default class Hydra2 extends EventEmitter {
+  //#region internal constants
   private HYDRA_REDIS_DB = 0;
   private redisPreKey = 'hydra:service';
   private mcMessageKey = 'hydra:service:mc';
@@ -20,7 +31,10 @@ export default class Hydra2 extends EventEmitter {
   private KEYS_PER_SCAN = '100';
   private UMF_INVALID_MESSAGE = 'UMF message requires "to", "from" and "body" fields';
   private INSTANCE_ID_NOT_SET = 'not set';  
+  //#endregion
 
+  //#region class vars
+  private static instance: Hydra2 | undefined;
   private instanceID:string = this.INSTANCE_ID_NOT_SET;
   private mcMessageChannelClient: string = '';
   private mcDirectMessageChannelClient: string = '';
@@ -34,13 +48,18 @@ export default class Hydra2 extends EventEmitter {
   private redisdb = null;
   private registeredRoutes: Array<string> = [];
   private registeredPlugins: Array<string> = [];
-  private presenceTimerInteval = null;
+  private presenceTimerInteval:any = null;
   private healthTimerInterval:any = null;
   private initialized: boolean = false;
   private hostName: string;
   private internalCache: Cache;
+  //#endregion
 
-  constructor() {
+  /**
+   * @name constructor
+   * @description private constructor because Hydra2 implements the sington design pattern
+   */
+  private constructor() {
     super();
     this.updatePresence = this.updatePresence.bind(this);
     this.updateHealthCheck = this.updateHealthCheck.bind(this);
@@ -48,26 +67,87 @@ export default class Hydra2 extends EventEmitter {
     this.internalCache = new Cache();
   }
 
+/* ============================================================================
+              __   ___    
+   ___  __ __/ /  / (_)___
+  / _ \/ // / _ \/ / / __/
+ / .__/\_,_/_.__/_/_/\__/ 
+/_/  
+
+Public members - these are the member intended for application use
+
+┌──────────────┬───────────────────────────────────────────────────────────┐
+│ MEMBER       │ USAGE                                                     │
+├──────────────┼───────────────────────────────────────────────────────────┤
+│ getInstance  │ returns an instance of a single Hydra2 object             │
+│ init         │ Hydra initialization method with config object            │
+└──────────────┴───────────────────────────────────────────────────────────┘
+============================================================================ */
+
+  /**
+   * @name getInstance
+   * @description returns an instance of a single Hydra2 object
+   * @returns {Hydar2} Hydra2 instance
+   */
+  static getInstance(): Hydra2 {
+    if (!Hydra2.instance) {
+      Hydra2.instance = new Hydra2();
+    }
+    return Hydra2.instance;
+  }
+
+  /**
+   * @name init
+   * @description Hydra initialization method
+   * @param config {IHydraHash} config.json file contents
+   * @todo does this need to return a promise?
+   * @returns void
+   */
   public async init(config: IHydraHash) {
     this.config = config.hydra;
     console.log(this.config);
-
-    // const ip:string = await Network.ipFromDNS('pnxtech.duckdns.org');
-    // const ip:string = Network.ipFromInterfaceNameMask('en0/255.255.255.0')
-    const ip:string | undefined = Network.ipBestGuess();
-    if (ip) {
-      console.log(`ip: ${ip}`);
-    }
-
     this.determineIPAddress();
+    this.registerService();
   }
 
-  private updatePresence() {
+/* ============================================================================
+             _           __     
+   ___  ____(_)  _____ _/ /____ 
+  / _ \/ __/ / |/ / _ `/ __/ -_)
+ / .__/_/ /_/|___/\_,_/\__/\__/ 
+/_/                             
 
+ Private members - for internal use only
+============================================================================ */
+
+  /**
+   * @name updatePresence
+   * @description Update redis with presence info.
+   * Called every PRESENCE_UPDATE_INTERVAL seconds.
+   * @returns void
+   */
+  private updatePresence(): void {
+    console.log('updatePresence');
   }
 
-  private updateHealthCheck() {
+  /**
+   * @name updatePresence
+   * @description Update redis with health info.
+   * Called one every HEALTH_UPDATE_INTERVAL seconds.
+   * @returns void
+   */
+   private updateHealthCheck(): void {
+    console.log('updateHealthCheck');
+  }
 
+  /**
+   * @name registerService
+   * @description registers the current process as a service
+   * @returns void
+   */
+  private registerService(): void {
+    this.presenceTimerInteval = setInterval(this.updatePresence, this.PRESENCE_UPDATE_INTERVAL);
+    this.healthTimerInterval = setInterval(this.updateHealthCheck, this.HEALTH_UPDATE_INTERVAL);    
   }
 
   /**
