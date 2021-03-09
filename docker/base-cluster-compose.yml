@@ -1,0 +1,73 @@
+version: "3.4"
+
+networks:
+  servicenet:
+    driver: overlay
+    ipam:
+      config:
+        -
+          subnet: 10.0.9.0/24
+
+services:
+  redis:
+    image: redis:6.0.6
+    volumes:
+      - "~/data/${STACK_NAME}/redis:/data"
+    networks:
+      - servicenet
+    ports:
+      - target: 6379
+        published: 6379
+        protocol: tcp
+        mode: ingress
+    deploy:
+      replicas: 1
+  
+  redis-cluster:
+    image: grokzen/redis-cluster:6.0.9
+    volumes:
+      - "~/data/${STACK_NAME}/redis-cluster:/data"
+    environment:
+      - "IP=0.0.0.0"
+    networks:
+      - servicenet
+    ports:
+      - target: 7000
+        published: 7000
+        protocol: tcp
+        mode: ingress
+      - target: 7001
+        published: 7001
+        protocol: tcp
+        mode: ingress
+      - target: 7002
+        published: 7002
+        protocol: tcp
+        mode: ingress
+      - target: 7003
+        published: 7003
+        protocol: tcp
+        mode: ingress
+      - target: 7004
+        published: 7004
+        protocol: tcp
+        mode: ingress
+      - target: 7005
+        published: 7005
+        protocol: tcp
+        mode: ingress
+    deploy:
+      replicas: 1
+
+  insight:
+    image: redislabs/redisinsight
+    networks:
+      - servicenet
+    ports:
+      - target: 8001
+        published: 8001
+        protocol: tcp
+        mode: ingress
+    volumes:
+      - "~/data/${STACK_NAME}/redis-insight:/db"
+

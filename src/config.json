@@ -6,7 +6,7 @@
     "servicePort": "8000",
     "serviceType": "hydra2",
     "redis": {
-      "url": "redis://10.0.0.180:7000/0"
+      "url": "redis://localhost:7000/0"
     }
   }
 }

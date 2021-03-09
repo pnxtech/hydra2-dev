@@ -44,6 +44,7 @@ export default class Network {
    * The expected format is a forward slash seperated name and mask pair.
    * Example: en0/255.255.255.0
    * @param interfaceNameMask {string} - an interface name and mask
+   * TODO: should interfaceNameMask be renamed and turned into a tuple?
    * @returns {string} ipaddress
    */
   static ipFromInterfaceNameMask(interfaceNameMask: string): string {
