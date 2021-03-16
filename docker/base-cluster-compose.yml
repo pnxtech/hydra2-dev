@@ -59,15 +59,3 @@ services:
     deploy:
       replicas: 1
 
-  insight:
-    image: redislabs/redisinsight
-    networks:
-      - servicenet
-    ports:
-      - target: 8001
-        published: 8001
-        protocol: tcp
-        mode: ingress
-    volumes:
-      - "~/data/${STACK_NAME}/redis-insight:/db"
-
