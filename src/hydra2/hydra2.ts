@@ -8,9 +8,11 @@
  Hydra2 is a rewrite of Hydra for NodeJS.      
 */
 
+import process from 'process';
 import {EventEmitter} from 'events';
 import Cache from './cache';
 import Network from './network';
+import util from 'util';
 import Utils from './utils';
 
 interface IHydraHash {
@@ -105,7 +107,6 @@ Public members - these are the member intended for application use
    */
   public async init(config: IHydraHash) {
     this.config = config.hydra;
-    console.log(this.config);
     this.determineIPAddress();
     this.registerService();
   }
@@ -148,6 +149,40 @@ Public members - these are the member intended for application use
   private registerService(): void {
     this.presenceTimerInteval = setInterval(this.updatePresence, this.PRESENCE_UPDATE_INTERVAL);
     this.healthTimerInterval = setInterval(this.updateHealthCheck, this.HEALTH_UPDATE_INTERVAL);    
+  }
+
+  /**
+   * @name getHealth
+   * @description returns an object containining machine / process health information
+   * @returns Object
+   */
+  private getHealth(): Object {
+    let lines = [];
+    let map: any = {};
+    let memory = util.inspect(process.memoryUsage());
+
+    memory = memory.replace(/[\ \{\}.|\n]/g, '');
+    lines = memory.split(',');
+    lines.forEach((line: string) => {
+      const keyval = line.split(':');
+      if (keyval.length === 2) {
+        map[keyval[0] || ''] = Number(keyval[1]);
+      }
+    });
+
+    let uptimeInSeconds = process.uptime();
+    return {
+      serviceName: this.serviceName,
+      instanceID: this.instanceID,
+      hostName: this.hostName,
+      sampledOn: Utils.getTimeStamp(),
+      processID: process.pid,
+      architecture: process.arch,
+      platform: process.platform,
+      nodeVersion: process.version,
+      memory: map,
+      uptimeSeconds: uptimeInSeconds
+    };
   }
 
   /**

@@ -113,4 +113,13 @@ export default class Utils {
       [a[i - 1], a[j]] = [a[j], a[i - 1]];
     }
   }
+
+  /**
+   * @name getTimeStamp
+   * @summary Retrieve an ISO 8601 timestamp.
+   * @return {string} timestamp - ISO 8601 timestamp
+   */
+   static getTimeStamp(): string {
+    return new Date().toISOString();
+  }  
 }
