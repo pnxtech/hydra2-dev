@@ -9,6 +9,7 @@
 */
 
 import process from 'process';
+import Redis from 'ioredis';
 import {EventEmitter} from 'events';
 import Cache from './cache';
 import Network from './network';
@@ -47,7 +48,7 @@ export default class Hydra2 extends EventEmitter {
   private serviceVersion: string = '';
   private isService: boolean = false;
 
-  private redisdb = null;
+  private redisdb:any;
   private registeredRoutes: Array<string> = [];
   private registeredPlugins: Array<string> = [];
   private presenceTimerInteval:any = null;
@@ -107,8 +108,15 @@ Public members - these are the member intended for application use
    */
   public async init(config: IHydraHash) {
     this.config = config.hydra;
-    this.determineIPAddress();
-    this.registerService();
+    if (this.config && this.config.redis && this.config.redis.url) {
+      try {
+        this.redisdb = new Redis(this.config.redis.url);
+        this.determineIPAddress();
+        this.registerService();    
+      } catch (e) {
+        console.log('TTTTT', e);        
+      }
+    }
   }
 
 /* ============================================================================
@@ -127,8 +135,28 @@ Public members - these are the member intended for application use
    * Called every PRESENCE_UPDATE_INTERVAL seconds.
    * @returns void
    */
-  private updatePresence(): void {
-    console.log('updatePresence');
+  private async updatePresence() {
+    try {
+      if (this.config && this.config.serviceIP && this.config.servicePort) {
+        let entry = Utils.safeJSONStringify({
+          serviceName: this.serviceName,
+          serviceDescription: this.serviceDescription,
+          version: this.serviceVersion,
+          instanceID: this.instanceID,
+          updatedOn: Utils.getTimeStamp(),
+          processID: process.pid,
+          ip: this.config.serviceIP,
+          port: this.config.servicePort,
+          hostName: this.hostName
+        });
+        await this.redisdb.pipeline()
+          .setex(`${this.redisPreKey}:${this.serviceName}:${this.instanceID}:presence`, this.KEY_EXPIRATION_TTL, this.instanceID)
+          .hset(`${this.redisPreKey}:nodes`, this.instanceID, entry)
+          .exec();  
+      }   
+    } catch (e) {
+      console.log('XXXXX', e);
+    }
   }
 
   /**
@@ -137,8 +165,18 @@ Public members - these are the member intended for application use
    * Called one every HEALTH_UPDATE_INTERVAL seconds.
    * @returns void
    */
-   private updateHealthCheck(): void {
-    console.log('updateHealthCheck');
+  private async updateHealthCheck() {  
+    try {
+      let entry = Object.assign({
+        updatedOn: Utils.getTimeStamp()
+      }, this.getHealth());
+      this.redisdb.pipeline()
+        .setex(`${this.redisPreKey}:${this.serviceName}:${this.instanceID}:health`, this.KEY_EXPIRATION_TTL, Utils.safeJSONStringify(entry))
+        .expire(`${this.redisPreKey}:${this.serviceName}:${this.instanceID}:health:log`, this.ONE_WEEK_IN_SECONDS)
+        .exec();  
+    } catch (e) {
+      console.log('YYYYYY', e);
+    }
   }
 
   /**
